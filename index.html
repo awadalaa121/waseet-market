@@ -161,7 +161,7 @@
                         </div>
                         <div>
                             <div class="flex items-center justify-between mb-1.5">
-                                <label class="text-xs font-bold text-gray-300">الرقم السري *</label>
+                                <label class="block text-xs font-bold text-gray-300">الرقم السري *</label>
                                 <button type="button" onclick="switchAuthSubView('forgot')" class="text-xs font-bold text-amber-400 hover:underline cursor-pointer">نسيت الرقم السري؟</button>
                             </div>
                             <div class="relative">
@@ -169,7 +169,7 @@
                                 <i class="fa-solid fa-lock absolute right-3.5 top-3.5 text-gray-500 text-sm"></i>
                             </div>
                         </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black py-3.5 rounded-2xl text-sm shadow-lg flex items-center justify-center gap-2 transition cursor-pointer">
+                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black py-3.5 rounded-2xl text-sm shadow-lg flex items-center justify-center gap-2 transition cursor-pointer">
                             <i class="fa-solid fa-right-to-bracket"></i>
                             <span>تسجيل الدخول الآن</span>
                         </button>
@@ -621,21 +621,21 @@
         let uploadedIdCardDataUrl = null;
         let recoveredUserAccount = null;
 
-        let users = [
-            { id: 101, name: "محمد عبد الرحمن", phone: "01012345678", email: "buyer@test.com", password: "123456", role: "buyer", status: "approved", nationalId: "-", idCardImage: "" },
-            { id: 102, name: "أ. مصطفى كمال (بائع)", phone: "01122334455", email: "seller@test.com", password: "123456", role: "seller", status: "pending", nationalId: "29605120102345", idCardImage: "https://placehold.co/400x250/111827/10b981?text=ID+Card+Placeholder" }
+        // تحميل البيانات الحقيقية من التخزين الدائم للمتصفح (localStorage) لكي لا تضيع أبداً
+        let users = JSON.parse(localStorage.getItem('waseet_users')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('waseet_current_user')) || null;
+        let products = JSON.parse(localStorage.getItem('waseet_products')) || [
+            { id: 1, title: "مجموعة روايات تاريخية (5 كتب أصلية)", category: "كتب", seller: "مكتبة المعرفة", price: 450, condition: "جديد تماماً", image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=600&q=80", desc: "روايات أصلية فاخرة." },
+            { id: 2, title: "جهاز قارئ كتب Kindle Paperwhite", category: "أجهزة", seller: "أحمد وائل", price: 2000, condition: "مستعمل كالجديد", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80", desc: "شاشة مريحة للعين وبطارية تدوم لأسابيع." }
         ];
+        let transactions = JSON.parse(localStorage.getItem('waseet_transactions')) || [];
 
-        let currentUser = users[0];
-
-        let products = [
-            { id: 1, title: "مجموعة روايات تاريخية (5 كتب أصلية)", category: "كتب", seller: "أ. مصطفى كمال (بائع)", price: 450, condition: "جديد تماماً", image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=600&q=80", desc: "روايات أصلية فاخرة." },
-            { id: 2, title: "جهاز قارئ كتب Kindle Paperwhite", category: "أجهزة", seller: "أ. مصطفى كمال (بائع)", price: 2000, condition: "مستعمل كالجديد", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80", desc: "شاشة مريحة للعين وبطارية تدوم لأسابيع." }
-        ];
-
-        let transactions = [
-            { txId: "#ORD-701", itemTitle: "جهاز قارئ كتب Kindle", buyer: "رامي عادل", buyerPhone: "01144556677", buyerLocation: "31.2001, 29.9187 (الإسكندرية)", buyerAddress: "الإسكندرية - سموحة", receiptName: "Receipt.jpg", receiptImage: "https://placehold.co/500x700/0f172a/10b981?text=InstaPay+Receipt%0A01287252198%0A2,000+EGP", seller: "أ. مصطفى كمال (بائع)", totalPrice: 2000, rate: 5, ownerProfit: 100, sellerNet: 1900, payoutStatus: "pending" }
-        ];
+        function saveDataToStorage() {
+            localStorage.setItem('waseet_users', JSON.stringify(users));
+            localStorage.setItem('waseet_current_user', JSON.stringify(currentUser));
+            localStorage.setItem('waseet_products', JSON.stringify(products));
+            localStorage.setItem('waseet_transactions', JSON.stringify(transactions));
+        }
 
         function getCommissionDetails(price) {
             const numericPrice = parseFloat(price) || 0;
@@ -721,6 +721,7 @@
                 return;
             }
             currentUser = found;
+            saveDataToStorage();
             updateHeaderUserUI();
             switchTab(found.role === 'seller' ? 'seller' : 'marketplace');
             showToast("مرحباً بك!", `أهلاً يا ${found.name} (${found.role === 'buyer' ? 'مشتري' : 'بائع'})`);
@@ -757,6 +758,7 @@
             };
             users.unshift(newUser);
             currentUser = newUser;
+            saveDataToStorage();
             updateHeaderUserUI();
             updateAdminDashboard();
             switchTab(role === 'seller' ? 'seller' : 'marketplace');
@@ -789,7 +791,7 @@
             }
             recoveredUserAccount.password = p1;
             currentUser = recoveredUserAccount;
-            document.getElementById('reset-password-box').classList.add('hidden');
+            saveDataToStorage();
             updateHeaderUserUI();
             switchAuthSubView('login');
             showToast("تم تغيير الرقم السري بنجاح 🔐", "سجل دخولك الآن.");
@@ -797,6 +799,7 @@
 
         function logoutUser() {
             currentUser = null;
+            saveDataToStorage();
             updateHeaderUserUI();
             switchAuthSubView('login');
             showToast("تم خروجك", "نتشرف بزيارتك دائماً.");
@@ -897,6 +900,7 @@
             const desc = document.getElementById('item-desc').value.trim();
 
             products.unshift({ id: Date.now(), title, category, seller, price, condition, image, desc });
+            saveDataToStorage();
             renderProducts();
             switchTab('marketplace');
             showToast("تم النشر بنجاح!", `تم عرض "${title}" في المتجر.`);
@@ -987,6 +991,7 @@
                 receiptName: uploadedReceiptName || "Receipt.jpg", receiptImage: uploadedReceiptDataUrl,
                 seller: item.seller, totalPrice: item.price, rate: comm.rate, ownerProfit: comm.fee, sellerNet: comm.sellerNet, payoutStatus: "pending"
             });
+            saveDataToStorage();
             closeCheckoutModal();
             updateAdminDashboard();
             showToast("تم الطلب بنجاح! 🎉", "تم استلام الحوالة وموقعك الجغرافي.");
@@ -1025,6 +1030,7 @@
             const u = users.find(user => user.id === userId);
             if (u) {
                 u.status = status;
+                saveDataToStorage();
                 updateAdminDashboard();
                 updateHeaderUserUI();
                 showToast("تم تحديث حالة المستخدم بنجاح");
@@ -1106,6 +1112,7 @@
 
         function markPaid(idx) {
             transactions[idx].payoutStatus = 'paid';
+            saveDataToStorage();
             updateAdminDashboard();
             showToast("تم تحويل المستحقات للبائع بنجاح!");
         }
